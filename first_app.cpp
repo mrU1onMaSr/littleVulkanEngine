@@ -1,6 +1,7 @@
 #include "first_app.hpp"
 #include "lve_pipeline.hpp"
 
+#include <GLFW/glfw3.h>
 #include <array>
 #include <cstdint>
 #include <memory>
@@ -12,7 +13,7 @@ namespace lve {
 FirstApp::FirstApp() {
     loadModels();
     createPipelineLayout();
-    createPipeline();
+    recreateSwapChain();
     createCommandBuffers();
 }
 
@@ -83,7 +84,18 @@ void FirstApp::createPipeline() {
 }
 
 void FirstApp::recreateSwapChain() {
-    
+    auto extent =  lveWindow.getExtennt();
+    while (extent.width ==  0 || extent.height == 0) {
+        extent = lveWindow.getExtennt();
+        glfwWaitEvents();
+    }
+
+    vkDeviceWaitIdle(lveDevice.device());
+    if (lveSwapChain) {
+        lveSwapChain.reset();
+    }
+    lveSwapChain = std::make_unique<LveSwapChain>(lveDevice, extent);
+    createPipeline();
 }
 
 void FirstApp::createCommandBuffers() {
@@ -138,11 +150,23 @@ void FirstApp::drawFrame() {
     uint32_t imageIndex;
     auto result = lveSwapChain->acquireNextImage(&imageIndex);
 
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        recreateSwapChain();
+        return;
+    }
+
     if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image");
     }
 
+
+    recordCommandBuffer(imageIndex);
     result = lveSwapChain->submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || lveWindow.wasWindowResized()) {
+        lveWindow.resetWindowResizedFlag();
+        recreateSwapChain();
+        return;
+    }
 
     if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image!");

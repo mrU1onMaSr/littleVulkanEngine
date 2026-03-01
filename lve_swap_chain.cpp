@@ -164,7 +164,12 @@ void LveSwapChain::createSwapChain() {
 
   createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-  if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
+  VkResult createResult = vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain);
+  if (createResult != VK_SUCCESS) {
+    std::cerr << "vkCreateSwapchainKHR failed: " << createResult << std::endl;
+    std::cerr << "swapChain imageCount: " << imageCount << " format: " << surfaceFormat.format
+              << " presentMode: " << presentMode << " extent: " << extent.width << "x"
+              << extent.height << std::endl;
     throw std::runtime_error("failed to create swap chain!");
   }
 
