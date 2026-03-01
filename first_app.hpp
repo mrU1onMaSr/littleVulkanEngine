@@ -27,6 +27,7 @@ namespace lve {
         void createPipelineLayout();
         void createPipeline();
         void createCommandBuffers();
+        void freeCommandBuffer();
         void drawFrame();
         void sierpinski(std::vector<LveModel::Vertex> &verticies, int depth, glm::vec2 left, glm::vec2 right, glm::vec2 top);
         void recreateSwapChain();
