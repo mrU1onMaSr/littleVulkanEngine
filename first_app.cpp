@@ -1,6 +1,11 @@
 #include "first_app.hpp"
 #include "lve_pipeline.hpp"
 #include "lve_swap_chain.hpp"
+#include <cstring>
+
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
 
 #include <GLFW/glfw3.h>
 #include <array>
@@ -11,6 +16,11 @@
 #include <vulkan/vulkan_core.h>
 
 namespace lve {
+
+struct SimplePushConnstantData {
+    glm::vec2 offset;
+    alignas(16) glm::vec3 color;
+};
 
 FirstApp::FirstApp() {
     loadModels();
@@ -61,12 +71,19 @@ void FirstApp::loadModels() {
 }
 
 void FirstApp::createPipelineLayout(){
+
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(SimplePushConnstantData);
+
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 0;
     pipelineLayoutInfo.pSetLayouts = nullptr;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
-    pipelineLayoutInfo.pPushConstantRanges = nullptr;
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
     if (vkCreatePipelineLayout(lveDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout");
@@ -170,7 +187,24 @@ VkCommandBufferBeginInfo beginInfo{};
 
     lvePipeline->bind(commandBuffers[imageIndex]);
     lveModel->bind(commandBuffers[imageIndex]);
-    lveModel->draw(commandBuffers[imageIndex]);
+
+    for (int j = 0; j < 4; j++) {
+        SimplePushConnstantData push{};
+        push.offset = {0.0f, -0.4f + j * 0.25f};
+        push.color = {0.0f, 0.0f, 0.2f + j * 0.25f};
+
+        vkCmdPushConstants(
+            commandBuffers[imageIndex], 
+            pipelineLayout, 
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
+            0, 
+            sizeof(SimplePushConnstantData), 
+            &push
+        );
+        lveModel->draw(commandBuffers[imageIndex]);
+    }
+
+    
 
     vkCmdEndRenderPass(commandBuffers[imageIndex]);
     if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
