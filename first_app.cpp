@@ -1,16 +1,17 @@
 #include "first_app.hpp"
 #include "lve_pipeline.hpp"
 #include "lve_swap_chain.hpp"
-#include <cstring>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 #include <GLFW/glfw3.h>
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
@@ -18,12 +19,13 @@
 namespace lve {
 
 struct SimplePushConnstantData {
+    glm::mat2 transform{1.f};
     glm::vec2 offset;
     alignas(16) glm::vec3 color;
 };
 
 FirstApp::FirstApp() {
-    loadModels();
+    loadGameObjects();
     createPipelineLayout();
     recreateSwapChain();
     createCommandBuffers();
@@ -60,14 +62,23 @@ void FirstApp::sierpinski(std::vector<LveModel::Vertex> &vertices, int depth, gl
 
 }
 
-void FirstApp::loadModels() {
+void FirstApp::loadGameObjects() {
     std::vector<LveModel::Vertex> vertices {
         {{-0.5f, 0.5f}, {1.0f ,0.0f ,0.0f}},
         {{0.5f, 0.5f}, {0.0f ,1.0f ,0.0f}}, 
         {{0.0f, -0.5f}, {0.0f ,0.0f ,1.0f}}
     };
     //sierpinski(vertices, 7, {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.0f, -0.5f});
-    lveModel = std::make_unique<LveModel>(lveDevice,vertices);
+    auto lveModel = std::make_shared<LveModel>(lveDevice,vertices);
+
+    auto triangle = LveGameObject::createGameObject();
+    triangle.model = lveModel;
+    triangle.color = {0.1f, 1.0f, 0.1f};
+    triangle.trannsform2d.translation.x = 0.2f;
+    triangle.trannsform2d.scale = {2.f, .5f};
+    triangle.trannsform2d.rotation = 0.25f * glm::two_pi<float>();
+
+    gameObjects.push_back(std::move(triangle));
 }
 
 void FirstApp::createPipelineLayout(){
@@ -151,8 +162,6 @@ void FirstApp::createCommandBuffers() {
 }
 
 void FirstApp::recordCommandBuffer(int imageIndex){
-    static int frame = 0;
-    frame = (frame + 1) % 1000;
 
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -188,30 +197,35 @@ void FirstApp::recordCommandBuffer(int imageIndex){
     vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
     vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
-    lvePipeline->bind(commandBuffers[imageIndex]);
-    lveModel->bind(commandBuffers[imageIndex]);
+    renderGameObjects(commandBuffers[imageIndex]);    
 
-    for (int j = 0; j < 4; j++) {
+    vkCmdEndRenderPass(commandBuffers[imageIndex]);
+    if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to record Command buffer!");
+    }
+}
+
+void FirstApp::renderGameObjects(VkCommandBuffer commandBuffer) {
+    lvePipeline->bind(commandBuffer);
+
+    for (auto& obj: gameObjects) {
+        obj.trannsform2d.rotation = glm::mod(obj.trannsform2d.rotation + 0.01f, glm::two_pi<float>());
+
         SimplePushConnstantData push{};
-        push.offset = {-0.5f + frame * 0.002f, -0.4f + j * 0.25f};
-        push.color = {0.0f, 0.0f, 0.2f + j * 0.25f};
+        push.offset = obj.trannsform2d.translation;
+        push.color = obj.color;
+        push.transform = obj.trannsform2d.mat2();
 
         vkCmdPushConstants(
-            commandBuffers[imageIndex], 
+            commandBuffer, 
             pipelineLayout, 
             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
             0, 
             sizeof(SimplePushConnstantData), 
             &push
         );
-        lveModel->draw(commandBuffers[imageIndex]);
-    }
-
-    
-
-    vkCmdEndRenderPass(commandBuffers[imageIndex]);
-    if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to record Command buffer!");
+        obj.model->bind(commandBuffer); 
+        obj.model->draw(commandBuffer);
     }
 }
 
