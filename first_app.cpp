@@ -18,7 +18,7 @@
 
 namespace lve {
 
-struct SimplePushConnstantData {
+struct SimplePushConstantData {
     glm::mat2 transform{1.f};
     glm::vec2 offset;
     alignas(16) glm::vec3 color;
@@ -86,7 +86,7 @@ void FirstApp::createPipelineLayout(){
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(SimplePushConnstantData);
+    pushConstantRange.size = sizeof(SimplePushConstantData);
 
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -212,7 +212,7 @@ void FirstApp::renderGameObjects(VkCommandBuffer commandBuffer) {
     for (auto& obj: gameObjects) {
         obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
 
-        SimplePushConnstantData push{};
+        SimplePushConstantData push{};
         push.offset = obj.transform2d.translation;
         push.color = obj.color;
         push.transform = obj.transform2d.mat2();
@@ -222,7 +222,7 @@ void FirstApp::renderGameObjects(VkCommandBuffer commandBuffer) {
             pipelineLayout, 
             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
             0, 
-            sizeof(SimplePushConnstantData), 
+            sizeof(SimplePushConstantData), 
             &push
         );
         obj.model->bind(commandBuffer); 
