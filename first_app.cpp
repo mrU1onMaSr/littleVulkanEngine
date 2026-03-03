@@ -74,9 +74,9 @@ void FirstApp::loadGameObjects() {
     auto triangle = LveGameObject::createGameObject();
     triangle.model = lveModel;
     triangle.color = {0.1f, 1.0f, 0.1f};
-    triangle.trannsform2d.translation.x = 0.2f;
-    triangle.trannsform2d.scale = {2.f, .5f};
-    triangle.trannsform2d.rotation = 0.25f * glm::two_pi<float>();
+    triangle.transform2d.translation.x = 0.2f;
+    triangle.transform2d.scale = {2.f, .5f};
+    triangle.transform2d.rotation = 0.25f * glm::two_pi<float>();
 
     gameObjects.push_back(std::move(triangle));
 }
@@ -206,15 +206,16 @@ void FirstApp::recordCommandBuffer(int imageIndex){
 }
 
 void FirstApp::renderGameObjects(VkCommandBuffer commandBuffer) {
+
     lvePipeline->bind(commandBuffer);
 
     for (auto& obj: gameObjects) {
-        obj.trannsform2d.rotation = glm::mod(obj.trannsform2d.rotation + 0.01f, glm::two_pi<float>());
+        obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
 
         SimplePushConnstantData push{};
-        push.offset = obj.trannsform2d.translation;
+        push.offset = obj.transform2d.translation;
         push.color = obj.color;
-        push.transform = obj.trannsform2d.mat2();
+        push.transform = obj.transform2d.mat2();
 
         vkCmdPushConstants(
             commandBuffer, 
