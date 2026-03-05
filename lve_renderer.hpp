@@ -13,7 +13,7 @@
 namespace lve {
     class LveRenderer {
         public:
-        LveRenderer(LveWindow &lveWindow, LveDevice &lveDevice);
+        LveRenderer(LveWindow &window, LveDevice &device);
         ~LveRenderer();
 
         LveRenderer(const LveWindow &) = delete;
@@ -24,7 +24,12 @@ namespace lve {
 
         VkCommandBuffer getCurrentCommandBuffer() const {
             assert(isFrameStarted && "Cannot get frame buffer if frame isn't in progress");
-            return commandBuffers[currentImageIndex];
+            return commandBuffers[currentFrameIndex];
+        }
+
+        int getFrameIndex() const {
+            assert(isFrameStarted && "Cannot get frame index if frame isn't in progress");
+            return currentFrameIndex;
         }
 
         VkCommandBuffer beginFrame();
@@ -36,13 +41,14 @@ namespace lve {
         void createCommandBuffers();
         void freeCommandBuffers();
         void recreateSwapChain();
-        //void sierpinski(std::vector<LveModel::Vertex> &verticies, int depth, glm::vec2 left, glm::vec2 right, glm::vec2 top);
 
-        LveWindow& lveWindow;
-        LveDevice& lveDevice;
+        LveWindow &lveWindow;
+        LveDevice &lveDevice;
         std::unique_ptr<LveSwapChain> lveSwapChain;
         std::vector<VkCommandBuffer> commandBuffers;
+
         uint32_t currentImageIndex;
+        int currentFrameIndex{0};
         bool isFrameStarted{false};
     };
 }
