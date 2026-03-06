@@ -48,6 +48,7 @@ void LveRenderer::freeCommandBuffers(){
 }
 
 void LveRenderer::createCommandBuffers() {
+    // Allocate one command buffer per swap chain image to avoid reuse issues on resize
     commandBuffers.resize(LveSwapChain::MAX_FRAMES_IN_FLIGHT);
 
     VkCommandBufferAllocateInfo allocInfo{};
@@ -104,7 +105,7 @@ void LveRenderer::endFrame() {
     }
 
     isFrameStarted = false;
-    currentFrameIndex = (currentImageIndex + 1) % LveSwapChain::MAX_FRAMES_IN_FLIGHT;
+    currentFrameIndex = (currentFrameIndex + 1) % LveSwapChain::MAX_FRAMES_IN_FLIGHT;
 }
 
 void LveRenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer) {
