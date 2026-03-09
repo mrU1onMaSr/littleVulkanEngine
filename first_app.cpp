@@ -4,6 +4,7 @@
 #include "lve_game_object.hpp"
 #include "simple_render_system.hpp"
 #include "keyboard_movement_controller.hpp"
+#include "mouse_controller.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -28,6 +29,8 @@ void FirstApp::run(){
 
     auto viewerObject = LveGameObject::createGameObject();
     KeyboardMovementController cameraController{};
+    MouseController mouseController{};
+
 
     auto currentTime = std::chrono::high_resolution_clock::now();
 
@@ -41,6 +44,8 @@ void FirstApp::run(){
 
         cameraController.moveInPlaneXZ(lveWindow.getWindow(), frameTime, viewerObject);
         camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+
+        mouseController.rotateCamWithMouse(lveWindow.getWindow(), frameTime, viewerObject);
 
         float aspect = lveRenderer.getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
