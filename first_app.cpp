@@ -62,10 +62,10 @@ std::unique_ptr<LveModel> createCubeModel(LveDevice& device, glm::vec3 offset) {
   LveModel::Builder modelBuilder{};
   modelBuilder.vertices = {
       // left face (white)
-      {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
-      {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
-      {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
-      {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
+      {{-.5f, -.5f, -.5f}, {.9f, .1f, .9f}},
+      {{-.5f, .5f, .5f}, {.9f, .1f, .9f}},
+      {{-.5f, -.5f, .5f}, {.9f, .1f, .9f}},
+      {{-.5f, .5f, -.5f}, {.9f, .1f, .9f}},
  
       // right face (yellow)
       {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
