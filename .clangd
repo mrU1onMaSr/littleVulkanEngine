@@ -6,4 +6,4 @@ CompileFlags:
     - /usr/include/c++/13
     - -isystem
     - /usr/include/x86_64-linux-gnu/c++/13
-    - /home/yuvan/dev/librarys/
+    - -I/home/yuvan/dev/librarys/tinyobjloader/

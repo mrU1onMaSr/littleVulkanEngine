@@ -1,9 +1,9 @@
 #include "lve_model.hpp"
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
-#include <vulkan/vulkan_core.h>
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
+#include <cstring>
 #include <cassert>
 
 namespace lve {
