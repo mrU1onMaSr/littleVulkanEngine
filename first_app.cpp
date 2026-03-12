@@ -59,12 +59,13 @@ void FirstApp::run(){
 }
 
 void FirstApp::loadGameObjects() {
-    std::shared_ptr<LveModel> lveModel = LveModel::createModelFromFile(lveDevice, "models/smooth_vase.obj");
+    std::shared_ptr<LveModel> lveModel = LveModel::createModelFromFile(lveDevice, "models/fuck.obj");
 
     auto gameObj = LveGameObject::createGameObject();
     gameObj.model = lveModel;
-    gameObj.transform.translation = {0.0f, 0.0f, 2.5f};
+    gameObj.transform.translation = {0.0f, 0.5f, 2.5f};
     gameObj.transform.scale = glm::vec3(3.f);
+    gameObj.transform.rotation = {0.f, glm::quarter_pi<float>(), 0.f};
     gameObjects.push_back(std::move(gameObj));
 }
 
